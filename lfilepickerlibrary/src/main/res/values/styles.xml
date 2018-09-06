@@ -8,8 +8,8 @@
         <item name="actionBarSize">36dp</item>
         <item name="navigationIcon">@mipmap/lfile_back1</item><!--返回icon-->
         <!-- 溢出菜单图标颜色-->
-        <item name="colorControlNormal">@android:color/white</item>
-        <item name="actionMenuTextColor">@android:color/white</item>
+        <!--<item name="colorControlNormal">@android:color/white</item>-->
+        <!--<item name="actionMenuTextColor">@android:color/white</item>-->
     </style>
 
     <!--toolbar 上title的样式-->

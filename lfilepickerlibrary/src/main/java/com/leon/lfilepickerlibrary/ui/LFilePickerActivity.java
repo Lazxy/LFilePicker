@@ -1,7 +1,6 @@
 package com.leon.lfilepickerlibrary.ui;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -17,9 +16,9 @@ import android.widget.Toast;
 
 import com.leon.lfilepickerlibrary.R;
 import com.leon.lfilepickerlibrary.adapter.PathAdapter;
+import com.leon.lfilepickerlibrary.consts.ExtraConsts;
 import com.leon.lfilepickerlibrary.filter.LFileFilter;
 import com.leon.lfilepickerlibrary.model.ParamEntity;
-import com.leon.lfilepickerlibrary.utils.Constant;
 import com.leon.lfilepickerlibrary.utils.FileUtils;
 import com.leon.lfilepickerlibrary.utils.StringUtils;
 import com.leon.lfilepickerlibrary.widget.EmptyRecyclerView;
@@ -31,14 +30,14 @@ import java.util.List;
 public class LFilePickerActivity extends AppCompatActivity {
 
     private final String TAG = "FilePickerLeon";
-    private EmptyRecyclerView mRecylerView;
+    private EmptyRecyclerView mRecyclerView;
     private View mEmptyView;
     private TextView mTvPath;
     private TextView mTvBack;
-    private Button mBtnAddBook;
+    private Button mBtnConfirmSelected;
     private String mPath;
-    private List<File> mListFiles;
-    private ArrayList<String> mListNumbers = new ArrayList<String>();//存放选中条目的数据地址
+    private List<File> mAvailableFileList;
+    private ArrayList<String> mSelectedFiles = new ArrayList<>();
     private PathAdapter mPathAdapter;
     private Toolbar mToolbar;
     private ParamEntity mParamEntity;
@@ -48,86 +47,47 @@ public class LFilePickerActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mParamEntity = (ParamEntity) getIntent().getExtras().getSerializable("param");
-        setTheme(mParamEntity.getTheme());
+        mParamEntity = (ParamEntity) getIntent().getExtras().getSerializable(ExtraConsts.EXTRA_FILE_PARAM);
+        if (mParamEntity != null && mParamEntity.getPickerTheme() != 0) {
+            setTheme(mParamEntity.getPickerTheme());
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lfile_picker);
+        initData();
         initView();
-        setSupportActionBar(mToolbar);
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        initToolbar();
-        updateAddButton();
-        if (!checkSDState()) {
-            Toast.makeText(this, R.string.lfile_NotFoundPath, Toast.LENGTH_SHORT).show();
+        initListener();
+    }
+
+    private void initData() {
+        if (!checkSDCardState()) {
+            Toast.makeText(this, R.string.lfile_not_found_path, Toast.LENGTH_SHORT).show();
             return;
         }
-        mPath = mParamEntity.getPath();
+        mPath = mParamEntity.getStartPath();
         if (StringUtils.isEmpty(mPath)) {
             //如果没有指定路径，则使用默认路径
             mPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         }
-        mTvPath.setText(mPath);
         mFilter = new LFileFilter(mParamEntity.getFileTypes());
-        mListFiles = FileUtils.getFileList(mPath, mFilter, mParamEntity.isGreater(), mParamEntity.getFileSize());
-        mPathAdapter = new PathAdapter(mListFiles, this, mFilter, mParamEntity.isMutilyMode(), mParamEntity.isGreater(), mParamEntity.getFileSize());
-        mRecylerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        mPathAdapter.setmIconStyle(mParamEntity.getIconStyle());
-        mRecylerView.setAdapter(mPathAdapter);
-        mRecylerView.setmEmptyView(mEmptyView);
-        initListener();
+        mAvailableFileList = FileUtils.getFileList(mPath, mFilter, mParamEntity.isGreater(), mParamEntity.getStandardFileSize());
     }
 
-    /**
-     * 更新Toolbar展示
-     */
-    private void initToolbar() {
-        if (mParamEntity.getTitle() != null) {
-            mToolbar.setTitle(mParamEntity.getTitle());
-        }
-        if (mParamEntity.getTitleStyle() != 0) {
-            mToolbar.setTitleTextAppearance(this, mParamEntity.getTitleStyle());
-        }
-        if (mParamEntity.getTitleColor() != null) {
-            mToolbar.setTitleTextColor(Color.parseColor(mParamEntity.getTitleColor())); //设置标题颜色
-        }
-        if (mParamEntity.getBackgroundColor() != null) {
-            mToolbar.setBackgroundColor(Color.parseColor(mParamEntity.getBackgroundColor()));
-        }
-//        switch (mParamEntity.getBackIcon()) {
-//            case Constant.BACKICON_STYLEONE:
-//                mToolbar.setNavigationIcon(R.mipmap.lfile_back1);
-//                break;
-//            case Constant.BACKICON_STYLETWO:
-//                mToolbar.setNavigationIcon(R.mipmap.lfile_back2);
-//                break;
-//            case Constant.BACKICON_STYLETHREE:
-//                //默认风格
-//                break;
-//        }
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+    private void initView() {
+        mRecyclerView = findViewById(R.id.rv_file_list);
+        mTvPath = findViewById(R.id.tv_path);
+        mTvBack = findViewById(R.id.tv_back);
+        mBtnConfirmSelected = findViewById(R.id.btn_confirm_selected);
+        mEmptyView = findViewById(R.id.empty_view);
+        mToolbar = findViewById(R.id.toolbar);
+        initToolbar();
+        initSelectedButton();
+        mTvPath.setText(mPath);
+        mPathAdapter = new PathAdapter(mAvailableFileList, this, mParamEntity);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        mRecyclerView.setAdapter(mPathAdapter);
+        mRecyclerView.setEmptyView(mEmptyView);
     }
 
-    private void updateAddButton() {
-        if (!mParamEntity.isMutilyMode()) {
-            mBtnAddBook.setVisibility(View.GONE);
-        }
-        if (!mParamEntity.isChooseMode()) {
-            mBtnAddBook.setVisibility(View.VISIBLE);
-            mBtnAddBook.setText(getString(R.string.lfile_OK));
-            //文件夹模式默认为单选模式
-            mParamEntity.setMutilyMode(false);
-        }
-    }
-
-    /**
-     * 添加点击事件处理
-     */
     private void initListener() {
         // 返回目录上一级
         mTvBack.setOnClickListener(new View.OnClickListener() {
@@ -138,193 +98,179 @@ public class LFilePickerActivity extends AppCompatActivity {
                     return;
                 }
                 mPath = tempPath;
-                mListFiles = FileUtils.getFileList(mPath, mFilter, mParamEntity.isGreater(), mParamEntity.getFileSize());
-                mPathAdapter.setmListData(mListFiles);
-                mPathAdapter.updateAllSelelcted(false);
+                mAvailableFileList = FileUtils.getFileList(mPath, mFilter, mParamEntity.isGreater(), mParamEntity.getStandardFileSize());
+                mPathAdapter.setListData(mAvailableFileList);
+                mPathAdapter.updateAllSelected(false);
                 mIsAllSelected = false;
                 updateMenuTitle();
-                mBtnAddBook.setText(getString(R.string.lfile_Selected));
-                mRecylerView.scrollToPosition(0);
-                setShowPath(mPath);
+                mBtnConfirmSelected.setText(getString(R.string.lfile_selected));
+                mRecyclerView.scrollToPosition(0);
+                mTvPath.setText(mPath);
                 //清除添加集合中数据
-                mListNumbers.clear();
-                if (mParamEntity.getAddText() != null) {
-                    mBtnAddBook.setText(mParamEntity.getAddText());
-                } else {
-                    mBtnAddBook.setText(R.string.lfile_Selected);
-                }
+                mSelectedFiles.clear();
             }
         });
         mPathAdapter.setOnItemClickListener(new PathAdapter.OnItemClickListener() {
             @Override
-            public void click(int position) {
-                if (mParamEntity.isMutilyMode()) {
-                    if (mListFiles.get(position).isDirectory()) {
-                        //如果当前是目录，则进入继续查看目录
-                        chekInDirectory(position);
-                        mPathAdapter.updateAllSelelcted(false);
-                        mIsAllSelected = false;
-                        updateMenuTitle();
-                        mBtnAddBook.setText(getString(R.string.lfile_Selected));
-                    } else {
-                        //如果已经选择则取消，否则添加进来
-                        if (mListNumbers.contains(mListFiles.get(position).getAbsolutePath())) {
-                            mListNumbers.remove(mListFiles.get(position).getAbsolutePath());
-                        } else {
-                            mListNumbers.add(mListFiles.get(position).getAbsolutePath());
-                        }
-                        if (mParamEntity.getAddText() != null) {
-                            mBtnAddBook.setText(mParamEntity.getAddText() + "( " + mListNumbers.size() + " )");
-                        } else {
-                            mBtnAddBook.setText(getString(R.string.lfile_Selected) + "( " + mListNumbers.size() + " )");
-                        }
-                        //先判断是否达到最大数量，如果数量达到上限提示，否则继续添加
-                        if (mParamEntity.getMaxNum() > 0 && mListNumbers.size() > mParamEntity.getMaxNum()) {
-                            Toast.makeText(LFilePickerActivity.this, R.string.lfile_OutSize, Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                    }
+            public void onClick(int position) {
+                if (mParamEntity.isMultiMode()) {
+                    actionInMultiMode(position);
                 } else {
-                    //单选模式直接返回
-                    if (mListFiles.get(position).isDirectory()) {
-                        chekInDirectory(position);
-                        return;
-                    }
-                    if (mParamEntity.isChooseMode()) {
-                        //选择文件模式,需要添加文件路径，否则为文件夹模式，直接返回当前路径
-                        mListNumbers.add(mListFiles.get(position).getAbsolutePath());
-                        chooseDone();
-                    } else {
-                        Toast.makeText(LFilePickerActivity.this, R.string.lfile_ChooseTip, Toast.LENGTH_SHORT).show();
-                    }
+                    actionInSingleMode(position);
                 }
-
             }
         });
 
-        mBtnAddBook.setOnClickListener(new View.OnClickListener() {
+        mBtnConfirmSelected.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mParamEntity.isChooseMode() && mListNumbers.size() < 1) {
-                    String info = mParamEntity.getNotFoundFiles();
+                if (mParamEntity.isChooseFileMode() && mSelectedFiles.size() < 1) {
+                    String info = mParamEntity.getNotFoundTips();
                     if (TextUtils.isEmpty(info)) {
-                        Toast.makeText(LFilePickerActivity.this, R.string.lfile_NotFoundBooks, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LFilePickerActivity.this, R.string.lfile_not_found_books, Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(LFilePickerActivity.this, info, Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     //返回
-                    chooseDone();
+                    commitSelection();
                 }
             }
         });
     }
 
+    private void actionInMultiMode(int position) {
+        if (mAvailableFileList.get(position).isDirectory()) {
+            //如果当前是目录，则进入继续查看目录
+            checkInDirectory(position);
+            mPathAdapter.updateAllSelected(false);
+            mIsAllSelected = false;
+            updateMenuTitle();
+            mBtnConfirmSelected.setText(getString(R.string.lfile_selected));
+        } else {
+            //如果已经选择则取消，否则添加进来
+            if (mSelectedFiles.contains(mAvailableFileList.get(position).getAbsolutePath())) {
+                mSelectedFiles.remove(mAvailableFileList.get(position).getAbsolutePath());
+            } else {
+                mSelectedFiles.add(mAvailableFileList.get(position).getAbsolutePath());
+            }
+            updateCounterText();
+            //先判断是否达到最大数量，如果数量达到上限提示，否则继续添加
+            if (mParamEntity.getMaxNum() > 0 && mSelectedFiles.size() > mParamEntity.getMaxNum()) {
+                Toast.makeText(LFilePickerActivity.this, R.string.lfile_out_size, Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+    }
 
-    /**
-     * 点击进入目录
-     *
-     * @param position
-     */
-    private void chekInDirectory(int position) {
-        mPath = mListFiles.get(position).getAbsolutePath();
-        setShowPath(mPath);
+    private void actionInSingleMode(int position) {
+        if (mParamEntity.isChooseFileMode()) {
+            if (mAvailableFileList.get(position).isDirectory()) {
+                checkInDirectory(position);
+            } else {
+                mSelectedFiles.add(mAvailableFileList.get(position).getAbsolutePath());
+                commitSelection();
+            }
+        } else {
+            if (mAvailableFileList.get(position).isDirectory()) {
+                mSelectedFiles.add(mAvailableFileList.get(position).getAbsolutePath());
+                commitSelection();
+            } else {
+                Toast.makeText(LFilePickerActivity.this, R.string.lfile_choose_folder_tip, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void checkInDirectory(int position) {
+        mPath = mAvailableFileList.get(position).getAbsolutePath();
+        mTvPath.setText(mPath);
         //更新数据源
-        mListFiles = FileUtils.getFileList(mPath, mFilter, mParamEntity.isGreater(), mParamEntity.getFileSize());
-        mPathAdapter.setmListData(mListFiles);
+        mAvailableFileList = FileUtils.getFileList(mPath, mFilter, mParamEntity.isGreater(), mParamEntity.getStandardFileSize());
+        mPathAdapter.setListData(mAvailableFileList);
         mPathAdapter.notifyDataSetChanged();
-        mRecylerView.scrollToPosition(0);
+        mRecyclerView.scrollToPosition(0);
     }
 
     /**
      * 完成提交
      */
-    private void chooseDone() {
+    private void commitSelection() {
         //判断是否数量符合要求
-        if (mParamEntity.isChooseMode()) {
-            if (mParamEntity.getMaxNum() > 0 && mListNumbers.size() > mParamEntity.getMaxNum()) {
-                Toast.makeText(LFilePickerActivity.this, R.string.lfile_OutSize, Toast.LENGTH_SHORT).show();
+        if (mParamEntity.isChooseFileMode()) {
+            if (mParamEntity.getMaxNum() > 0 && mSelectedFiles.size() > mParamEntity.getMaxNum()) {
+                Toast.makeText(LFilePickerActivity.this, R.string.lfile_out_size, Toast.LENGTH_SHORT).show();
                 return;
             }
         }
         Intent intent = new Intent();
-        intent.putStringArrayListExtra("paths", mListNumbers);
-        intent.putExtra("path", mTvPath.getText().toString().trim());
+        intent.putStringArrayListExtra(ExtraConsts.EXTRA_FILE_PATHS, mSelectedFiles);
         setResult(RESULT_OK, intent);
         this.finish();
     }
 
-    /**
-     * 初始化控件
-     */
-    private void initView() {
-        mRecylerView = (EmptyRecyclerView) findViewById(R.id.recylerview);
-        mTvPath = (TextView) findViewById(R.id.tv_path);
-        mTvBack = (TextView) findViewById(R.id.tv_back);
-        mBtnAddBook = (Button) findViewById(R.id.btn_addbook);
-        mEmptyView = findViewById(R.id.empty_view);
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        if (mParamEntity.getAddText() != null) {
-            mBtnAddBook.setText(mParamEntity.getAddText());
+    private void initToolbar() {
+        if (mParamEntity.getPickerTitle() != null) {
+            mToolbar.setTitle(mParamEntity.getPickerTitle());
+        }
+        if (mParamEntity.getTitleStyle() != 0) {
+            mToolbar.setTitleTextAppearance(this, mParamEntity.getTitleStyle());
+        }
+        if (mParamEntity.getBackIcon() != 0) {
+            mToolbar.setNavigationIcon(mParamEntity.getBackIcon());
+        }
+        setSupportActionBar(mToolbar);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    private void initSelectedButton() {
+        if (!mParamEntity.isMultiMode()) {
+            mBtnConfirmSelected.setVisibility(View.GONE);
+        }
+        if (!mParamEntity.isChooseFileMode()) {
+            mBtnConfirmSelected.setVisibility(View.VISIBLE);
+            mBtnConfirmSelected.setText(getString(R.string.lfile_OK));
+            //文件夹模式默认为单选模式
+            mParamEntity.setMultiMode(false);
         }
     }
 
     /**
      * 检测SD卡是否可用
      */
-    private boolean checkSDState() {
+    private boolean checkSDCardState() {
         return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
-    }
-
-    /**
-     * 显示顶部地址
-     *
-     * @param path
-     */
-    private void setShowPath(String path) {
-        mTvPath.setText(path);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main_toolbar, menu);
         this.mMenu = menu;
-        updateOptionsMenu(menu);
+        mMenu.findItem(R.id.action_selecteall_cancel).setVisible(mParamEntity.isMultiMode());
         return true;
-    }
-
-    /**
-     * 更新选项菜单展示，如果是单选模式，不显示全选操作
-     *
-     * @param menu
-     */
-    private void updateOptionsMenu(Menu menu) {
-        mMenu.findItem(R.id.action_selecteall_cancel).setVisible(mParamEntity.isMutilyMode());
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_selecteall_cancel) {
             //将当前目录下所有文件选中或者取消
-            mPathAdapter.updateAllSelelcted(!mIsAllSelected);
+            mPathAdapter.updateAllSelected(!mIsAllSelected);
             mIsAllSelected = !mIsAllSelected;
             if (mIsAllSelected) {
-                for (File mListFile : mListFiles) {
+                for (File mListFile : mAvailableFileList) {
                     //不包含再添加，避免重复添加
-                    if (!mListFile.isDirectory() && !mListNumbers.contains(mListFile.getAbsolutePath())) {
-                        mListNumbers.add(mListFile.getAbsolutePath());
+                    if (!mListFile.isDirectory() && !mSelectedFiles.contains(mListFile.getAbsolutePath())) {
+                        mSelectedFiles.add(mListFile.getAbsolutePath());
                     }
-                    if (mParamEntity.getAddText() != null) {
-                        mBtnAddBook.setText(mParamEntity.getAddText() + "( " + mListNumbers.size() + " )");
-                    } else {
-                        mBtnAddBook.setText(getString(R.string.lfile_Selected) + "( " + mListNumbers.size() + " )");
-                    }
+                    updateCounterText();
                 }
             } else {
-                mListNumbers.clear();
-                mBtnAddBook.setText(getString(R.string.lfile_Selected));
+                mSelectedFiles.clear();
+                mBtnConfirmSelected.setText(getString(R.string.lfile_selected));
             }
             updateMenuTitle();
+        } else if (item.getItemId() == android.R.id.home) {
+            finish();
         }
         return true;
     }
@@ -335,9 +281,17 @@ public class LFilePickerActivity extends AppCompatActivity {
     public void updateMenuTitle() {
 
         if (mIsAllSelected) {
-            mMenu.getItem(0).setTitle(getString(R.string.lfile_Cancel));
+            mMenu.getItem(0).setTitle(getString(R.string.lfile_cancel));
         } else {
-            mMenu.getItem(0).setTitle(getString(R.string.lfile_SelectAll));
+            mMenu.getItem(0).setTitle(getString(R.string.lfile_select_all));
+        }
+    }
+
+    private void updateCounterText() {
+        if (mParamEntity.getMultiModeConfirmText() != null) {
+            mBtnConfirmSelected.setText(mParamEntity.getMultiModeConfirmText() + "( " + mSelectedFiles.size() + " )");
+        } else {
+            mBtnConfirmSelected.setText(getString(R.string.lfile_selected) + "( " + mSelectedFiles.size() + " )");
         }
     }
 

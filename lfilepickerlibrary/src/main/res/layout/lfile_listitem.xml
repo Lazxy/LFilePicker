@@ -10,11 +10,10 @@
                 android:paddingRight="12dp">
 
     <ImageView
-        android:id="@+id/iv_type"
+        android:id="@+id/iv_file_type_icon"
         android:layout_width="42dp"
         android:layout_height="42dp"
-        android:layout_centerVertical="true"
-        android:background="@mipmap/lfile_file_style_green"/>
+        android:layout_centerVertical="true" />
 
     <CheckBox
         android:id="@+id/cb_choose"
@@ -30,7 +29,7 @@
         android:layout_height="match_parent"
         android:layout_marginLeft="10dp"
         android:layout_toLeftOf="@id/cb_choose"
-        android:layout_toRightOf="@id/iv_type"
+        android:layout_toRightOf="@id/iv_file_type_icon"
         android:orientation="vertical"
         android:padding="10dp">
 
@@ -51,6 +50,6 @@
         android:layout_height="1px"
         android:layout_below="@id/layout_info"
         android:layout_marginTop="6dp"
-        android:background="@color/lfile_lightgray"/>
+        android:background="@color/lfile_light_gray" />
 
 </RelativeLayout>

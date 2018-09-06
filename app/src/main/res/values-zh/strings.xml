@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="start_path">起始路径: </string>
+    <string name="file_type">文件类型: </string>
+    <string name="is_choose_file">是否只选择文件</string>
+    <string name="is_multi_mode">是否为多选模式</string>
+    <string name="is_greater_than_standard">是否选择大于标准大小的文件</string>
+    <string name="standard_file_size">标准文件大小: </string>
+    <string name="max_select_file_num">最大文件选择数量: </string>
+</resources>

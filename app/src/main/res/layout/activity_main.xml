@@ -1,84 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/lfile_white"
-    android:orientation="vertical"
-    android:padding="16dp"
+    android:layout_height="wrap_content"
+    android:scrollbars="none"
     tools:context=".activity.MainActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/lfile_lightgray">
+        android:layout_height="match_parent"
+        android:background="@color/lfile_white"
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:gravity="center"
-            android:onClick="openFromActivity"
-            android:padding="12dp"
-            android:text="openFromActivity"
-            android:textSize="18sp"/>
-    </LinearLayout>
+            android:background="@color/lfile_light_gray">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:background="@color/lfile_lightgray">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center"
+                android:onClick="openFromActivity"
+                android:padding="12dp"
+                android:text="openFromActivity"
+                android:textSize="18sp" />
+        </LinearLayout>
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:gravity="center"
-            android:onClick="openFragmentActivity"
-            android:padding="12dp"
-            android:text="openFragmentActivity"
-            android:textSize="18sp"/>
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/start_path"
+                android:textColor="@color/text_hint"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_start_path_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_main"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/file_type"
+                android:textColor="@color/text_hint"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_file_types_input"
+                android:layout_width="match_parent"
+                android:hint="all"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_main"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <CheckBox
+                android:id="@+id/cb_is_choose_file"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/LFileCheckBoxTheme"
+                android:text="@string/is_choose_file"
+                android:textColor="@color/text_main"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <CheckBox
+                android:id="@+id/cb_is_multi_mode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/is_multi_mode"
+                android:theme="@style/LFileCheckBoxTheme"
+                android:textColor="@color/text_main"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <CheckBox
+                android:id="@+id/cb_is_grater_than_standard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/LFileCheckBoxTheme"
+                android:text="@string/is_greater_than_standard"
+                android:textColor="@color/text_main"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/standard_file_size"
+                android:textColor="@color/text_hint"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_standard_size_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_main"
+                android:inputType="number"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/max_select_file_num"
+                android:textColor="@color/text_hint"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_select_max_num"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_main"
+                android:inputType="number"
+                android:textSize="14sp" />
+        </LinearLayout>
+
     </LinearLayout>
-
-    <RadioGroup
-        android:id="@+id/rg_iconstyle"
-        style="@style/RadioGroupStyle">
-
-        <RadioButton
-            android:id="@+id/radio_yellow"
-            style="@style/RadioStyle"
-            android:text="经典风-黄"/>
-
-        <RadioButton
-            android:id="@+id/radio_green"
-            style="@style/RadioStyle"
-            android:text="清新风-绿"/>
-
-        <RadioButton
-            android:id="@+id/radio_blue"
-            style="@style/RadioStyle"
-            android:text="柔和风-蓝"/>
-    </RadioGroup>
-
-    <RadioGroup
-        android:id="@+id/rg_backarrawstyle"
-        style="@style/RadioGroupStyle">
-
-        <RadioButton
-            android:id="@+id/arrawback_styleone"
-            style="@style/RadioStyle"
-            android:text="返回按钮1"/>
-
-        <RadioButton
-            android:id="@+id/arrawback_styletwo"
-            style="@style/RadioStyle"
-            android:text="返回按钮2"/>
-
-        <RadioButton
-            android:id="@+id/arrawback_stylethree"
-            style="@style/RadioStyle"
-            android:text="返回按钮3"/>
-    </RadioGroup>
-</LinearLayout>
+</ScrollView>
